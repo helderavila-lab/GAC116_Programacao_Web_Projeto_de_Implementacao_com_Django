@@ -1,10 +1,10 @@
 from django.apps import AppConfig
 
 
-class UsuariosConfig(AppConfig):
+class AgendamentoConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'usuarios'
-    verbose_name = 'Usuários'
+    name = 'agendamento'
+    verbose_name = 'Agendamento'
 
     def ready(self):
-        import usuarios.signals  # noqa: F401
+        import agendamento.signals  # noqa: F401

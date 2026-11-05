@@ -1,81 +1,34 @@
-from django.contrib.auth.models import Group, Permission
-from django.db.models.signals import post_migrate, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
-from .models import PerfilMedico, PerfilPaciente, PerfilRecepcionista
-
-# Permissões padrão atribuídas a cada grupo (perfil) de usuário.
-GRUPOS_PERMISSOES = {
-    'Médicos': [
-        ('usuarios', 'perfilpaciente', ['view_perfilpaciente']),
-        ('agendamento', 'horariodisponivel', [
-            'add_horariodisponivel', 'change_horariodisponivel',
-            'delete_horariodisponivel', 'view_horariodisponivel',
-        ]),
-        ('agendamento', 'consulta', ['view_consulta', 'change_consulta']),
-    ],
-    'Recepcionistas': [
-        ('usuarios', 'perfilpaciente', [
-            'add_perfilpaciente', 'change_perfilpaciente',
-            'delete_perfilpaciente', 'view_perfilpaciente',
-        ]),
-        ('usuarios', 'perfilmedico', ['view_perfilmedico']),
-        ('agendamento', 'horariodisponivel', [
-            'add_horariodisponivel', 'change_horariodisponivel',
-            'delete_horariodisponivel', 'view_horariodisponivel',
-        ]),
-        ('agendamento', 'consulta', [
-            'add_consulta', 'change_consulta', 'delete_consulta', 'view_consulta',
-        ]),
-    ],
-    'Pacientes': [],
-}
+from .models import Consulta, HorarioDisponivel
 
 
-@receiver(post_migrate)
-def criar_grupos_padrao(sender, **kwargs):
-    """Cria os grupos de perfis e concede as permissões padrão após as migrações."""
-    # Executa também após o app 'agendamento', pois as permissões de cada app só
-    # existem depois do post_migrate daquele app (que roda depois de 'usuarios').
-    if sender.name not in ('usuarios', 'agendamento'):
-        return
-
-    for nome_grupo, permissoes in GRUPOS_PERMISSOES.items():
-        grupo, _ = Group.objects.get_or_create(name=nome_grupo)
-        for app_label, model_name, codenames in permissoes:
-            for codename in codenames:
-                try:
-                    permissao = Permission.objects.get(
-                        content_type__app_label=app_label,
-                        content_type__model=model_name,
-                        codename=codename,
-                    )
-                except Permission.DoesNotExist:
-                    continue
-                grupo.permissions.add(permissao)
+def _atualizar_horario(horario_id):
+    horario = HorarioDisponivel.objects.filter(pk=horario_id).first()
+    if horario:
+        horario.atualizar_disponibilidade()
 
 
-def _vincular_grupo(usuario, nome_grupo, tornar_staff):
-    grupo, _ = Group.objects.get_or_create(name=nome_grupo)
-    usuario.groups.add(grupo)
-    if tornar_staff and not usuario.is_staff:
-        usuario.is_staff = True
-        usuario.save(update_fields=['is_staff'])
+@receiver(pre_save, sender=Consulta)
+def guardar_horario_anterior(sender, instance, **kwargs):
+    instance._horario_anterior_id = None
+    if instance.pk:
+        instance._horario_anterior_id = (
+            Consulta.objects.filter(pk=instance.pk).values_list('horario_id', flat=True).first()
+        )
 
 
-@receiver(post_save, sender=PerfilMedico)
-def ao_criar_perfil_medico(sender, instance, created, **kwargs):
-    if created:
-        _vincular_grupo(instance.usuario, 'Médicos', tornar_staff=True)
+@receiver(post_save, sender=Consulta)
+def sincronizar_disponibilidade_ao_salvar(sender, instance, **kwargs):
+    """Mantém o campo 'disponivel' do horário coerente com as consultas (vale para
+    admin, edição em lista e qualquer outro ponto do sistema)."""
+    _atualizar_horario(instance.horario_id)
+    anterior = getattr(instance, '_horario_anterior_id', None)
+    if anterior and anterior != instance.horario_id:
+        _atualizar_horario(anterior)
 
 
-@receiver(post_save, sender=PerfilRecepcionista)
-def ao_criar_perfil_recepcionista(sender, instance, created, **kwargs):
-    if created:
-        _vincular_grupo(instance.usuario, 'Recepcionistas', tornar_staff=True)
-
-
-@receiver(post_save, sender=PerfilPaciente)
-def ao_criar_perfil_paciente(sender, instance, created, **kwargs):
-    if created:
-        _vincular_grupo(instance.usuario, 'Pacientes', tornar_staff=False)
+@receiver(post_delete, sender=Consulta)
+def sincronizar_disponibilidade_ao_excluir(sender, instance, **kwargs):
+    _atualizar_horario(instance.horario_id)
