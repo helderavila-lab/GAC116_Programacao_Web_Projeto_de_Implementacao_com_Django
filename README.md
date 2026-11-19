@@ -66,6 +66,7 @@ sistema-agendamento-consultas/
 │   ├── signals.py        # Disponibilidade automática dos horários
 │   └── tests.py, tests_site.py   # Testes automatizados
 ├── manage.py
+├── pacientes.py          # Pacientes e consultas de exemplo para demonstração
 └── requirements.txt
 ```
 
@@ -134,6 +135,9 @@ python manage.py migrate
 
 # 5. (Opcional) Popular o banco com dados de exemplo
 python manage.py seed_dados
+
+# 6. (Opcional) Cadastrar pacientes e consultas de exemplo (já roda o seed_dados)
+python pacientes.py
 ```
 
 ## Instruções para execução
@@ -161,6 +165,24 @@ python manage.py test
 | Paciente | `paciente` | `paciente12345` |
 
 Também é possível criar uma conta nova de paciente pela tela **Cadastre-se**.
+
+### Pacientes de exemplo (após `python pacientes.py`)
+
+O script `pacientes.py` cadastra pacientes com dados completos (CPF, nascimento, telefone e endereço)
+e consultas de exemplo: histórico com consultas concluídas e canceladas, e próximas consultas
+agendadas e confirmadas. Ainda sobram horários livres para agendar. Pode ser rodado mais de uma vez
+sem duplicar nada. Todos entram pelo site (`/contas/entrar/`) com a senha `paciente12345`.
+
+| Usuário | Nome |
+|---|---|
+| `maria.silva` | Maria Silva |
+| `pedro.santos` | Pedro Santos |
+| `juliana.costa` | Juliana Costa |
+| `roberto.almeida` | Roberto Almeida |
+| `fernanda.lima` | Fernanda Lima |
+| `lucas.oliveira` | Lucas Oliveira |
+
+O paciente `paciente` (do `seed_dados`) também ganha consultas no histórico.
 
 ## Controle de versão
 
