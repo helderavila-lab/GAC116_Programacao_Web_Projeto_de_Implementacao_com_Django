@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block titulo %}Meus dados{% endblock %}
+
+{% block conteudo %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          <h1 class="h4 fw-bold mb-1"><i class="bi bi-person-vcard text-primary"></i> Meus dados</h1>
+          <p class="text-body-secondary mb-4">
+            Usuário: <strong>{{ user.username }}</strong> · CPF: <strong>{{ perfil.cpf }}</strong>
+          </p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-6">{% with campo=form.first_name %}{% include '_campo.html' %}{% endwith %}</div>
+              <div class="col-md-6">{% with campo=form.last_name %}{% include '_campo.html' %}{% endwith %}</div>
+              <div class="col-md-6">{% with campo=form.email %}{% include '_campo.html' %}{% endwith %}</div>
+              <div class="col-md-6">{% with campo=form.data_nascimento %}{% include '_campo.html' %}{% endwith %}</div>
+              <div class="col-md-6">{% with campo=form.telefone %}{% include '_campo.html' %}{% endwith %}</div>
+              <div class="col-md-6">{% with campo=form.endereco %}{% include '_campo.html' %}{% endwith %}</div>
+            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-between mt-3">
+              <a href="{% url 'usuarios:alterar_senha' %}" class="btn btn-outline-secondary"><i class="bi bi-key"></i> Alterar senha</a>
+              <button type="submit" class="btn btn-primary px-4">Salvar alterações</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

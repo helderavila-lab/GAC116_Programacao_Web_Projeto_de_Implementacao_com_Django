@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block titulo %}Início{% endblock %}
+
+{% block conteudo %}
+<section class="hero py-5 border-bottom">
+  <div class="container py-lg-4">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="badge text-bg-primary mb-3">Agendamento online</span>
+        <h1 class="display-5 fw-bold">Sua consulta marcada em poucos cliques.</h1>
+        <p class="lead text-body-secondary">
+          Na Clínica Vida+ você escolhe a especialidade, o médico e o horário que preferir,
+          acompanha suas consultas e cancela quando precisar, tudo pelo navegador.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          {% if user.is_authenticated %}
+            <a href="{% url 'usuarios:painel' %}" class="btn btn-primary btn-lg"><i class="bi bi-arrow-right-circle"></i> Ir para minha área</a>
+          {% else %}
+            <a href="{% url 'usuarios:cadastro' %}" class="btn btn-primary btn-lg"><i class="bi bi-person-plus"></i> Cadastre-se</a>
+            <a href="{% url 'usuarios:entrar' %}" class="btn btn-outline-primary btn-lg"><i class="bi bi-box-arrow-in-right"></i> Já tenho conta</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3"><i class="bi bi-info-circle text-primary"></i> Como funciona</h2>
+            <ol class="list-group list-group-numbered list-group-flush">
+              <li class="list-group-item bg-transparent">Crie sua conta de paciente.</li>
+              <li class="list-group-item bg-transparent">Escolha especialidade, médico e data.</li>
+              <li class="list-group-item bg-transparent">Confirme o horário livre que preferir.</li>
+              <li class="list-group-item bg-transparent">Acompanhe ou cancele em “Minhas consultas”.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container py-5">
+  <h2 class="h3 mb-4">Especialidades</h2>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+    {% for especialidade in especialidades %}
+      <div class="col">
+        <div class="card h-100 border-0 shadow-sm card-hover">
+          <div class="card-body">
+            <span class="icone-redondo mb-3"><i class="bi bi-clipboard2-pulse"></i></span>
+            <h3 class="h6 fw-semibold">{{ especialidade.nome }}</h3>
+            <p class="small text-body-secondary mb-2">{{ especialidade.descricao|default:"Atendimento especializado." }}</p>
+            <span class="badge text-bg-light border">{{ especialidade.total_medicos }} médico{{ especialidade.total_medicos|pluralize }}</span>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-body-secondary">Nenhuma especialidade cadastrada ainda.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container pb-4">
+  <h2 class="h3 mb-4">Nossa equipe</h2>
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    {% for medico in medicos %}
+      <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body d-flex gap-3">
+            <span class="icone-redondo flex-shrink-0"><i class="bi bi-person-badge"></i></span>
+            <div>
+              <h3 class="h6 fw-semibold mb-1">{{ medico }}</h3>
+              <div class="small text-body-secondary mb-2">{{ medico.especialidade }} · {{ medico.crm }}</div>
+              {% if medico.biografia %}<p class="small mb-2">{{ medico.biografia|truncatewords:20 }}</p>{% endif %}
+              {% if medico.horarios_livres %}
+                <span class="badge text-bg-success">{{ medico.horarios_livres }} horário{{ medico.horarios_livres|pluralize:"s" }} livre{{ medico.horarios_livres|pluralize:"s" }}</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Sem horários livres</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-body-secondary">Nenhum médico cadastrado ainda.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
