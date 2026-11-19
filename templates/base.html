@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-br" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Clínica Vida+{% endblock %} · Clínica Vida+</title>
+  <script>
+    // Aplica o tema salvo antes de desenhar a página (evita "piscar" claro/escuro).
+    (function () {
+      var tema = 'auto';
+      try { tema = localStorage.getItem('tema') || 'auto'; } catch (e) {}
+      if (tema === 'auto') {
+        tema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-bs-theme', tema);
+    })();
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    main { flex: 1; }
+    .navbar-brand .bi { color: var(--bs-primary); }
+    .hero { background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), .12), rgba(var(--bs-success-rgb), .10)); }
+    .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: var(--bs-box-shadow) !important; }
+    .icone-redondo { width: 3rem; height: 3rem; display: inline-flex; align-items: center; justify-content: center;
+                     border-radius: 50%; background: rgba(var(--bs-primary-rgb), .12); color: var(--bs-primary); font-size: 1.4rem; }
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="bg-body-tertiary">
+<nav class="navbar navbar-expand-lg bg-body border-bottom sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{% url 'inicio' %}"><i class="bi bi-heart-pulse-fill"></i> Clínica Vida+</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
+            aria-controls="menu" aria-expanded="false" aria-label="Abrir menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'inicio' %}active{% endif %}" href="{% url 'inicio' %}">Início</a>
+        </li>
+        {% if user.is_authenticated and user.perfil_paciente %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'minhas_consultas' %}active{% endif %}"
+               href="{% url 'agendamento:minhas_consultas' %}"><i class="bi bi-calendar-check"></i> Minhas consultas</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'horarios_livres' or request.resolver_match.url_name == 'agendar' %}active{% endif %}"
+               href="{% url 'agendamento:horarios_livres' %}"><i class="bi bi-calendar-plus"></i> Agendar consulta</a>
+          </li>
+        {% endif %}
+        {% if user.is_staff %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'admin:index' %}"><i class="bi bi-speedometer2"></i> Painel administrativo</a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <ul class="navbar-nav align-items-lg-center gap-lg-2">
+        <li class="nav-item dropdown">
+          <button class="btn btn-link nav-link dropdown-toggle" id="botao-tema" data-bs-toggle="dropdown"
+                  aria-expanded="false" aria-label="Escolher tema">
+            <i class="bi bi-circle-half" id="icone-tema"></i> <span class="d-lg-none">Tema</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" data-tema="light"><i class="bi bi-sun-fill me-2"></i>Claro</button></li>
+            <li><button class="dropdown-item" data-tema="dark"><i class="bi bi-moon-stars-fill me-2"></i>Escuro</button></li>
+            <li><button class="dropdown-item" data-tema="auto"><i class="bi bi-circle-half me-2"></i>Automático</button></li>
+          </ul>
+        </li>
+        {% if user.is_authenticated %}
+          <li class="nav-item dropdown">
+            <button class="btn btn-link nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              {% if user.perfil_paciente %}
+                <li><a class="dropdown-item" href="{% url 'usuarios:meus_dados' %}"><i class="bi bi-person-vcard me-2"></i>Meus dados</a></li>
+              {% endif %}
+              <li><a class="dropdown-item" href="{% url 'usuarios:alterar_senha' %}"><i class="bi bi-key me-2"></i>Alterar senha</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'usuarios:sair' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                </form>
+              </li>
+            </ul>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:entrar' %}">Entrar</a></li>
+          <li class="nav-item"><a class="btn btn-primary btn-sm px-3" href="{% url 'usuarios:cadastro' %}">Cadastre-se</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main>
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block conteudo %}{% endblock %}
+</main>
+
+<footer class="bg-body border-top py-4 mt-5">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 small text-body-secondary">
+    <span><i class="bi bi-heart-pulse"></i> Clínica Vida+ · Sistema de agendamento de consultas</span>
+    <span>GAC116 · Programação Web · Django</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  (function () {
+    var icones = { light: 'bi-sun-fill', dark: 'bi-moon-stars-fill', auto: 'bi-circle-half' };
+    function lerTema() { try { return localStorage.getItem('tema') || 'auto'; } catch (e) { return 'auto'; } }
+    function aplicar(tema) {
+      var real = tema === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : tema;
+      document.documentElement.setAttribute('data-bs-theme', real);
+      var icone = document.getElementById('icone-tema');
+      if (icone) { icone.className = 'bi ' + icones[tema]; }
+      document.querySelectorAll('[data-tema]').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-tema') === tema);
+      });
+    }
+    document.querySelectorAll('[data-tema]').forEach(function (botao) {
+      botao.addEventListener('click', function () {
+        var tema = botao.getAttribute('data-tema');
+        try { localStorage.setItem('tema', tema); } catch (e) {}
+        aplicar(tema);
+      });
+    });
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+      if (lerTema() === 'auto') { aplicar('auto'); }
+    });
+    aplicar(lerTema());
+  })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

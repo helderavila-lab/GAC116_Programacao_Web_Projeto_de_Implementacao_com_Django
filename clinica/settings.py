@@ -58,7 +58,7 @@ ROOT_URLCONF = 'clinica.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -123,6 +123,18 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+# Autenticação do site (área do paciente)
+
+LOGIN_URL = 'usuarios:entrar'
+LOGIN_REDIRECT_URL = 'usuarios:painel'
+LOGOUT_REDIRECT_URL = 'inicio'
+
+# Classes do Bootstrap para as mensagens do sistema
+from django.contrib.messages import constants as message_constants  # noqa: E402
+
+MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
+
+
 # Jazzmin (customização do Django Admin)
 
 JAZZMIN_SETTINGS = {
@@ -133,6 +145,11 @@ JAZZMIN_SETTINGS = {
     'copyright': 'Clínica Vida+',
     'search_model': ['usuarios.PerfilPaciente', 'agendamento.Consulta'],
     'show_sidebar': True,
+    # Atalho no topo do painel para voltar ao site.
+    'topmenu_links': [
+        {'name': 'Início', 'url': 'admin:index'},
+        {'name': 'Ver site', 'url': 'inicio', 'new_window': False},
+    ],
     'navigation_expanded': True,
     # Exibe no topo o seletor de tema e de modo Claro/Escuro/Automático.
     'show_theme_chooser': True,
