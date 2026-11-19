@@ -1,0 +1,5 @@
+{% if consulta.status == 'agendada' %}<span class="badge text-bg-primary">Agendada</span>
+{% elif consulta.status == 'confirmada' %}<span class="badge text-bg-success">Confirmada</span>
+{% elif consulta.status == 'concluida' %}<span class="badge text-bg-secondary">Concluída</span>
+{% elif consulta.status == 'cancelada' %}<span class="badge text-bg-danger">Cancelada</span>
+{% endif %}
